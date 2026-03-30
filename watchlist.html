@@ -1,0 +1,384 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Shared Watchlist — Cars &amp; Bikes</title>
+<style>
+  :root {
+    --bg: #ffffff;
+    --bg2: #f5f5f3;
+    --bg3: #eeede9;
+    --text: #1a1a18;
+    --text2: #6b6b67;
+    --text3: #9e9e9a;
+    --border: rgba(0,0,0,0.1);
+    --border2: rgba(0,0,0,0.18);
+    --radius: 10px;
+    --radius-sm: 7px;
+    --blue-bg: #E6F1FB; --blue-text: #185FA5;
+    --green-bg: #EAF3DE; --green-text: #3B6D11;
+    --coral-bg: #FAECE7; --coral-text: #993C1D;
+    --teal-bg: #E1F5EE; --teal-text: #0F6E56;
+    --red-bg: #FCEBEB; --red-text: #A32D2D;
+    --amber-bg: #FAEEDA; --amber-text: #854F0B;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #1c1c1a; --bg2: #252523; --bg3: #2e2e2b;
+      --text: #f0efe9; --text2: #a0a09c; --text3: #6a6a66;
+      --border: rgba(255,255,255,0.08); --border2: rgba(255,255,255,0.15);
+      --blue-bg: #0C447C; --blue-text: #B5D4F4;
+      --green-bg: #27500A; --green-text: #C0DD97;
+      --coral-bg: #712B13; --coral-text: #F5C4B3;
+      --teal-bg: #085041; --teal-text: #9FE1CB;
+      --red-bg: #791F1F; --red-text: #F7C1C1;
+      --amber-bg: #633806; --amber-text: #FAC775;
+    }
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: var(--bg3); color: var(--text); min-height: 100vh; }
+  .topbar { background: var(--bg); border-bottom: 0.5px solid var(--border); padding: 0 1.5rem; display: flex; align-items: center; justify-content: space-between; height: 54px; position: sticky; top: 0; z-index: 10; }
+  .topbar-left { display: flex; align-items: center; gap: 10px; }
+  .topbar-title { font-size: 15px; font-weight: 500; }
+  .topbar-sub { font-size: 12px; color: var(--text2); }
+  .tabs { display: flex; gap: 4px; }
+  .tab { padding: 5px 13px; border-radius: var(--radius-sm); border: 0.5px solid var(--border); font-size: 12px; font-weight: 500; cursor: pointer; background: transparent; color: var(--text2); transition: all 0.12s; }
+  .tab.active { background: var(--bg2); color: var(--text); border-color: var(--border2); }
+  .main { max-width: 780px; margin: 0 auto; padding: 1.5rem 1rem 4rem; }
+  .user-bar { display: flex; align-items: center; gap: 10px; background: var(--bg); border: 0.5px solid var(--border); border-radius: var(--radius); padding: 10px 14px; margin-bottom: 1.25rem; }
+  .avatar { width: 30px; height: 30px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 500; flex-shrink: 0; }
+  .av-t { background: var(--blue-bg); color: var(--blue-text); }
+  .av-f { background: var(--green-bg); color: var(--green-text); }
+  .user-info { font-size: 13px; color: var(--text2); }
+  .user-info strong { color: var(--text); font-weight: 500; }
+  .user-actions { margin-left: auto; display: flex; gap: 6px; }
+  .btn-sm { padding: 5px 11px; border-radius: var(--radius-sm); border: 0.5px solid var(--border2); font-size: 12px; cursor: pointer; background: var(--bg); color: var(--text2); }
+  .btn-sm:hover { background: var(--bg2); color: var(--text); }
+  .add-form { background: var(--bg); border: 0.5px solid var(--border); border-radius: var(--radius); padding: 1rem 1.25rem; margin-bottom: 1.25rem; }
+  .form-label { font-size: 13px; font-weight: 500; color: var(--text); margin-bottom: 10px; }
+  .form-row { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 8px; }
+  .form-row input, .form-row select { flex: 1; min-width: 130px; height: 36px; padding: 0 10px; border-radius: var(--radius-sm); border: 0.5px solid var(--border2); background: var(--bg2); color: var(--text); font-size: 13px; }
+  .form-row input:focus, .form-row select:focus { outline: none; border-color: var(--blue-text); }
+  .form-row select option { background: var(--bg); }
+  .btn-add { height: 36px; padding: 0 18px; border-radius: var(--radius-sm); border: 0.5px solid var(--border2); background: var(--bg); color: var(--text); font-size: 13px; font-weight: 500; cursor: pointer; white-space: nowrap; }
+  .btn-add:hover { background: var(--bg2); }
+  .toolbar { display: flex; align-items: center; justify-content: space-between; margin-bottom: 1rem; flex-wrap: wrap; gap: 8px; }
+  .filters { display: flex; gap: 6px; flex-wrap: wrap; }
+  .chip { padding: 4px 11px; border-radius: var(--radius-sm); border: 0.5px solid var(--border); font-size: 12px; cursor: pointer; background: var(--bg); color: var(--text2); }
+  .chip.active { background: var(--bg2); border-color: var(--border2); color: var(--text); }
+  .sync-actions { display: flex; gap: 6px; }
+  .btn-sync { padding: 5px 11px; border-radius: var(--radius-sm); border: 0.5px solid var(--border); font-size: 12px; cursor: pointer; background: var(--bg); color: var(--text2); display: flex; align-items: center; gap: 5px; }
+  .btn-sync:hover { background: var(--bg2); color: var(--text); border-color: var(--border2); }
+  .count { font-size: 12px; color: var(--text3); margin-bottom: 0.75rem; }
+  .card { background: var(--bg); border: 0.5px solid var(--border); border-radius: var(--radius); padding: 1rem 1.25rem; margin-bottom: 10px; display: flex; gap: 14px; align-items: flex-start; transition: border-color 0.12s; }
+  .card:hover { border-color: var(--border2); }
+  .card-icon { width: 42px; height: 42px; border-radius: var(--radius-sm); display: flex; align-items: center; justify-content: center; font-size: 22px; flex-shrink: 0; }
+  .icon-car { background: var(--coral-bg); }
+  .icon-bike { background: var(--teal-bg); }
+  .card-body { flex: 1; min-width: 0; }
+  .card-top { display: flex; align-items: flex-start; justify-content: space-between; gap: 8px; flex-wrap: wrap; }
+  .card-title { font-size: 15px; font-weight: 500; color: var(--text); }
+  .card-price { font-size: 15px; font-weight: 500; color: var(--text); white-space: nowrap; }
+  .card-meta { font-size: 12px; color: var(--text2); margin-top: 4px; display: flex; gap: 10px; flex-wrap: wrap; }
+  .card-footer { display: flex; align-items: center; justify-content: space-between; margin-top: 10px; flex-wrap: wrap; gap: 6px; }
+  .badges { display: flex; gap: 5px; flex-wrap: wrap; align-items: center; }
+  .badge { display: inline-block; padding: 2px 8px; border-radius: 5px; font-size: 11px; font-weight: 500; }
+  .badge-car { background: var(--coral-bg); color: var(--coral-text); }
+  .badge-bike { background: var(--teal-bg); color: var(--teal-text); }
+  .badge-t { background: var(--blue-bg); color: var(--blue-text); }
+  .badge-f { background: var(--green-bg); color: var(--green-text); }
+  .badge-date { font-size: 11px; color: var(--text3); }
+  .card-actions { display: flex; gap: 5px; }
+  .action { padding: 4px 10px; border-radius: var(--radius-sm); border: 0.5px solid var(--border); font-size: 12px; cursor: pointer; background: transparent; color: var(--text2); }
+  .action:hover { background: var(--bg2); border-color: var(--border2); }
+  .action.del { border-color: transparent; color: var(--red-text); }
+  .action.del:hover { background: var(--red-bg); border-color: var(--red-bg); }
+  .note-row { margin-top: 8px; }
+  .note-input { width: 100%; height: 32px; padding: 0 10px; border-radius: var(--radius-sm); border: 0.5px solid var(--border2); background: var(--bg2); color: var(--text); font-size: 12px; }
+  .note-input:focus { outline: none; border-color: var(--blue-text); }
+  .note-text { font-size: 12px; color: var(--text2); margin-top: 5px; font-style: italic; }
+  .empty { text-align: center; padding: 4rem 1rem; color: var(--text2); }
+  .empty-icon { font-size: 36px; margin-bottom: 10px; }
+  .empty p { font-size: 14px; }
+  .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.45); z-index: 100; align-items: center; justify-content: center; }
+  .modal-overlay.open { display: flex; }
+  .modal { background: var(--bg); border-radius: var(--radius); border: 0.5px solid var(--border2); padding: 1.5rem; max-width: 420px; width: 90%; }
+  .modal h3 { font-size: 15px; font-weight: 500; margin-bottom: 10px; }
+  .modal p { font-size: 13px; color: var(--text2); margin-bottom: 14px; line-height: 1.6; }
+  .modal textarea { width: 100%; height: 120px; padding: 10px; border-radius: var(--radius-sm); border: 0.5px solid var(--border2); background: var(--bg2); color: var(--text); font-size: 12px; font-family: monospace; resize: none; }
+  .modal textarea:focus { outline: none; border-color: var(--blue-text); }
+  .modal-actions { display: flex; gap: 8px; margin-top: 14px; justify-content: flex-end; }
+  .btn-primary { padding: 7px 16px; border-radius: var(--radius-sm); border: 0.5px solid var(--border2); background: var(--bg2); color: var(--text); font-size: 13px; font-weight: 500; cursor: pointer; }
+  .btn-primary:hover { border-color: var(--text3); }
+  .btn-cancel { padding: 7px 16px; border-radius: var(--radius-sm); border: 0.5px solid transparent; background: transparent; color: var(--text2); font-size: 13px; cursor: pointer; }
+  .toast { position: fixed; bottom: 1.5rem; left: 50%; transform: translateX(-50%); background: var(--text); color: var(--bg); padding: 9px 18px; border-radius: var(--radius-sm); font-size: 13px; opacity: 0; transition: opacity 0.2s; pointer-events: none; z-index: 200; }
+  .toast.show { opacity: 1; }
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="topbar-left">
+    <div class="topbar-title">Shared Watchlist</div>
+    <div class="topbar-sub">Carsales &amp; Bikesales</div>
+  </div>
+  <div class="tabs">
+    <button class="tab active" onclick="setTab('all',this)">All</button>
+    <button class="tab" onclick="setTab('car',this)">Cars</button>
+    <button class="tab" onclick="setTab('bike',this)">Bikes</button>
+  </div>
+</div>
+
+<div class="main">
+
+  <div class="user-bar">
+    <div class="avatar" id="av"></div>
+    <div class="user-info">Signed in as <strong id="uname"></strong></div>
+    <div class="user-actions">
+      <button class="btn-sm" onclick="switchUser()">Switch account</button>
+    </div>
+  </div>
+
+  <div class="add-form">
+    <div class="form-label">Add a listing</div>
+    <div class="form-row">
+      <input id="in-title" type="text" placeholder="e.g. 2019 Mazda CX-5 Touring" />
+      <select id="in-type">
+        <option value="car">Car — Carsales</option>
+        <option value="bike">Bike — Bikesales</option>
+      </select>
+    </div>
+    <div class="form-row">
+      <input id="in-price" type="text" placeholder="Price (e.g. $24,990)" />
+      <input id="in-year" type="text" placeholder="Year" style="max-width:90px" />
+      <input id="in-km" type="text" placeholder="KMs" style="max-width:110px" />
+      <input id="in-loc" type="text" placeholder="Location" />
+    </div>
+    <div class="form-row">
+      <input id="in-url" type="text" placeholder="Listing URL (optional)" style="flex:2" />
+      <button class="btn-add" onclick="addListing()">Add to watchlist</button>
+    </div>
+  </div>
+
+  <div class="toolbar">
+    <div class="filters">
+      <button class="chip active" onclick="setFilter('all',this)">All listings</button>
+      <button class="chip" onclick="setFilter('mine',this)">Added by me</button>
+      <button class="chip" onclick="setFilter('friend',this)">Added by friend</button>
+    </div>
+    <div class="sync-actions">
+      <button class="btn-sync" onclick="exportData()">⬆ Export</button>
+      <button class="btn-sync" onclick="openImport()">⬇ Import</button>
+    </div>
+  </div>
+
+  <div class="count" id="count-label"></div>
+  <div id="listings"></div>
+
+</div>
+
+<!-- Import modal -->
+<div class="modal-overlay" id="import-modal">
+  <div class="modal">
+    <h3>Import watchlist</h3>
+    <p>Paste the exported JSON from your friend below. This will merge their listings into yours — nothing will be deleted.</p>
+    <textarea id="import-text" placeholder="Paste JSON here..."></textarea>
+    <div class="modal-actions">
+      <button class="btn-cancel" onclick="closeImport()">Cancel</button>
+      <button class="btn-primary" onclick="doImport()">Merge listings</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const USERS = [
+  { id: 'thomas', name: 'Thomas', initials: 'T', avClass: 'av-t', badgeClass: 'badge-t' },
+  { id: 'friend', name: 'Friend',  initials: 'F', avClass: 'av-f', badgeClass: 'badge-f' }
+];
+
+let currentUser = 0;
+let tab = 'all';
+let filter = 'all';
+
+function loadListings() {
+  try { return JSON.parse(localStorage.getItem('watchlist') || '[]'); } catch(e) { return []; }
+}
+function saveListings(arr) {
+  localStorage.setItem('watchlist', JSON.stringify(arr));
+}
+
+function setTab(t, el) {
+  tab = t;
+  document.querySelectorAll('.tab').forEach(x => x.classList.remove('active'));
+  el.classList.add('active');
+  render();
+}
+
+function setFilter(f, el) {
+  filter = f;
+  document.querySelectorAll('.chip').forEach(x => x.classList.remove('active'));
+  el.classList.add('active');
+  render();
+}
+
+function switchUser() {
+  currentUser = 1 - currentUser;
+  render();
+}
+
+function addListing() {
+  const title = document.getElementById('in-title').value.trim();
+  if (!title) { document.getElementById('in-title').focus(); return; }
+  const listings = loadListings();
+  listings.unshift({
+    id: Date.now(),
+    title,
+    type: document.getElementById('in-type').value,
+    price: document.getElementById('in-price').value.trim(),
+    year: document.getElementById('in-year').value.trim(),
+    km: document.getElementById('in-km').value.trim(),
+    loc: document.getElementById('in-loc').value.trim(),
+    url: document.getElementById('in-url').value.trim(),
+    addedBy: USERS[currentUser].id,
+    addedAt: new Date().toLocaleDateString('en-AU', { day: 'numeric', month: 'short', year: 'numeric' }),
+    note: ''
+  });
+  saveListings(listings);
+  ['in-title','in-price','in-year','in-km','in-loc','in-url'].forEach(id => document.getElementById(id).value = '');
+  render();
+  toast('Listing added');
+}
+
+function deleteListing(id) {
+  saveListings(loadListings().filter(l => l.id !== id));
+  render();
+}
+
+function saveNote(id, val) {
+  const listings = loadListings();
+  const l = listings.find(x => x.id === id);
+  if (l) { l.note = val; saveListings(listings); }
+}
+
+function toggleNote(id) {
+  const row = document.getElementById('note-' + id);
+  if (!row) return;
+  const open = row.style.display !== 'none';
+  row.style.display = open ? 'none' : 'block';
+  if (!open) row.querySelector('input').focus();
+}
+
+function exportData() {
+  const listings = loadListings();
+  const json = JSON.stringify(listings, null, 2);
+  const blob = new Blob([json], { type: 'application/json' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'watchlist-' + new Date().toISOString().slice(0,10) + '.json';
+  a.click();
+  toast('Exported — send the file to your friend');
+}
+
+function openImport() {
+  document.getElementById('import-modal').classList.add('open');
+}
+function closeImport() {
+  document.getElementById('import-modal').classList.remove('open');
+  document.getElementById('import-text').value = '';
+}
+function doImport() {
+  const raw = document.getElementById('import-text').value.trim();
+  try {
+    const incoming = JSON.parse(raw);
+    if (!Array.isArray(incoming)) throw new Error('Not an array');
+    const existing = loadListings();
+    const existingIds = new Set(existing.map(l => l.id));
+    const merged = [...existing];
+    let added = 0;
+    incoming.forEach(l => {
+      if (!existingIds.has(l.id)) { merged.push(l); added++; }
+    });
+    merged.sort((a, b) => b.id - a.id);
+    saveListings(merged);
+    closeImport();
+    render();
+    toast(added + ' new listing' + (added !== 1 ? 's' : '') + ' merged in');
+  } catch(e) {
+    toast('Invalid JSON — check the pasted data');
+  }
+}
+
+function render() {
+  const u = USERS[currentUser];
+  document.getElementById('av').className = 'avatar ' + u.avClass;
+  document.getElementById('av').textContent = u.initials;
+  document.getElementById('uname').textContent = u.name;
+
+  const all = loadListings();
+  const list = all.filter(l => {
+    if (tab !== 'all' && l.type !== tab) return false;
+    if (filter === 'mine' && l.addedBy !== u.id) return false;
+    if (filter === 'friend' && l.addedBy === u.id) return false;
+    return true;
+  });
+
+  document.getElementById('count-label').textContent = list.length + ' listing' + (list.length !== 1 ? 's' : '');
+
+  const container = document.getElementById('listings');
+  if (!list.length) {
+    container.innerHTML = '<div class="empty"><div class="empty-icon">🔍</div><p>No listings here yet — add one above.</p></div>';
+    return;
+  }
+
+  container.innerHTML = list.map(l => {
+    const adder = USERS.find(x => x.id === l.addedBy) || USERS[0];
+    const canDelete = adder.id === u.id;
+    const meta = [l.year, l.km ? l.km + ' km' : '', l.loc].filter(Boolean).join(' · ');
+    const typeLabel = l.type === 'car' ? 'Carsales' : 'Bikesales';
+    const typeBadge = l.type === 'car' ? 'badge-car' : 'badge-bike';
+    const iconClass = l.type === 'car' ? 'icon-car' : 'icon-bike';
+    const icon = l.type === 'car' ? '🚗' : '🏍️';
+    return `<div class="card">
+      <div class="card-icon ${iconClass}">${icon}</div>
+      <div class="card-body">
+        <div class="card-top">
+          <div class="card-title">${l.title}</div>
+          ${l.price ? `<div class="card-price">${l.price}</div>` : ''}
+        </div>
+        ${meta ? `<div class="card-meta">${meta}</div>` : ''}
+        ${l.note ? `<div class="note-text">"${l.note}"</div>` : ''}
+        <div class="card-footer">
+          <div class="badges">
+            <span class="badge ${typeBadge}">${typeLabel}</span>
+            <span class="badge ${adder.avClass === 'av-t' ? 'badge-t' : 'badge-f'}">Added by ${adder.name}</span>
+            ${l.addedAt ? `<span class="badge-date">${l.addedAt}</span>` : ''}
+          </div>
+          <div class="card-actions">
+            ${l.url ? `<button class="action" onclick="window.open('${l.url}','_blank')">View listing</button>` : ''}
+            <button class="action" onclick="toggleNote(${l.id})">Note</button>
+            ${canDelete ? `<button class="action del" onclick="deleteListing(${l.id})">Remove</button>` : ''}
+          </div>
+        </div>
+        <div class="note-row" id="note-${l.id}" style="display:none">
+          <input class="note-input" placeholder="Add a note..." value="${l.note || ''}" onchange="saveNote(${l.id}, this.value)" onblur="saveNote(${l.id}, this.value)" />
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function toast(msg) {
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.classList.add('show');
+  clearTimeout(el._t);
+  el._t = setTimeout(() => el.classList.remove('show'), 2500);
+}
+
+render();
+</script>
+</body>
+</html>
